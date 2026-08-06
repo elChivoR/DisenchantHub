@@ -9,6 +9,7 @@ Libs\LibStub.lua
 
 Core.lua
 Config.lua
+Locale.lua
 Filter.lua
 Lists.lua
 Disenchant.lua
