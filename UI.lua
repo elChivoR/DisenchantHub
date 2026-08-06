@@ -150,7 +150,7 @@ function DH.UI:CreateItemList()
     -- Header
     local header = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     header:SetPoint("TOPLEFT", 8, -6)
-    header:SetText("Item                                              Rarity        ilvl      Status")
+    header:SetText("Item                                              Rarity        ilvl      Type")
     header:SetTextColor(0.7, 0.7, 0.7)
 
     -- Scroll frame
@@ -188,9 +188,9 @@ function DH.UI:CreateItemList()
         row.ilvlText:SetPoint("LEFT", 330, 0)
         row.ilvlText:SetWidth(40)
 
-        row.statusText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        row.statusText:SetPoint("LEFT", 375, 0)
-        row.statusText:SetWidth(90)
+        row.typeText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.typeText:SetPoint("LEFT", 375, 0)
+        row.typeText:SetWidth(90)
 
         row:SetScript("OnEnter", function(self)
             if self.itemLink then
@@ -265,11 +265,8 @@ function DH.UI:UpdateItemRows()
             row.ilvlText:SetText(item.ilvl)
             row.ilvlText:SetTextColor(1, 1, 1)
 
-            if item.canDE then
-                row.statusText:SetText("|cff00ff00OK|r")
-            else
-                row.statusText:SetText("|cffff4444" .. (item.reason or "No") .. "|r")
-            end
+            row.typeText:SetText(item.itemType)
+            row.typeText:SetTextColor(0.7, 0.7, 0.7)
 
             row.itemLink = item.link
             row.itemData = item

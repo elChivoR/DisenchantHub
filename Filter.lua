@@ -78,26 +78,26 @@ function DH.Filter:GetDisenchantableItems()
             local itemLink = GetContainerItemLink(bag, slot)
             if itemLink then
                 local canDE, reason = self:CanDisenchant(itemLink)
-                local name, _, rarity, ilvl, _, itemType = GetItemInfo(itemLink)
-                local _, count = GetContainerItemInfo(bag, slot)
-                table.insert(items, {
-                    bag = bag,
-                    slot = slot,
-                    link = itemLink,
-                    name = name or "?",
-                    rarity = rarity or 0,
-                    ilvl = ilvl or 0,
-                    itemType = itemType or "?",
-                    count = count or 1,
-                    canDE = canDE,
-                    reason = reason,
-                    itemId = self:GetItemId(itemLink),
-                })
+                if canDE then
+                    local name, _, rarity, ilvl, _, itemType = GetItemInfo(itemLink)
+                    local _, count = GetContainerItemInfo(bag, slot)
+                    table.insert(items, {
+                        bag = bag,
+                        slot = slot,
+                        link = itemLink,
+                        name = name or "?",
+                        rarity = rarity or 0,
+                        ilvl = ilvl or 0,
+                        itemType = itemType or "?",
+                        count = count or 1,
+                        canDE = true,
+                        itemId = self:GetItemId(itemLink),
+                    })
+                end
             end
         end
     end
     table.sort(items, function(a, b)
-        if a.canDE ~= b.canDE then return a.canDE end
         if a.rarity ~= b.rarity then return a.rarity > b.rarity end
         return a.ilvl > b.ilvl
     end)
