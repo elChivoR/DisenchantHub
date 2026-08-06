@@ -296,6 +296,12 @@ function DH.UI:ShowItemContextMenu(row)
     local item = row.itemData
     if not item or not item.itemId then return end
 
+    if not self.contextMenu then
+        self.contextMenu = CreateFrame("Frame", "DHContextMenu", UIParent, "UIDropDownMenuTemplate")
+    end
+
+    CloseDropDownMenus()
+
     local menu = {
         { text = item.name, isTitle = true, notCheckable = true },
         { text = "Seleccionar para DE", notCheckable = true,
@@ -313,8 +319,7 @@ function DH.UI:ShowItemContextMenu(row)
             end },
     }
 
-    local menuFrame = CreateFrame("Frame", "DHContextMenu", UIParent, "UIDropDownMenuTemplate")
-    EasyMenu(menu, menuFrame, "cursor", 0, 0, "MENU")
+    EasyMenu(menu, self.contextMenu, "cursor", 0, 0, "MENU")
 end
 
 -- ============================================================
