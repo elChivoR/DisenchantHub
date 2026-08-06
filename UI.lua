@@ -271,8 +271,10 @@ end
 
 function DH.UI:RefreshItems()
     self.items = DH.Filter:GetDisenchantableItems()
-    self.selectedItems = {}
-    if self.selectAllCb then self.selectAllCb:SetChecked(false) end
+    if not DH.Disenchant:IsProcessing() then
+        self.selectedItems = {}
+        if self.selectAllCb then self.selectAllCb:SetChecked(false) end
+    end
     self:UpdateItemRows()
     self:UpdateSelectedCount()
 end
@@ -313,11 +315,16 @@ function DH.UI:UpdateItemRows()
 
             local key = item.bag .. ":" .. item.slot
             row.cb:SetChecked(self.selectedItems[key] ~= nil)
+            row.cb:Enable(not DH.Disenchant:IsProcessing())
 
             row:Show()
         else
             row:Hide()
         end
+    end
+
+    if self.selectAllCb then
+        self.selectAllCb:Enable(not DH.Disenchant:IsProcessing())
     end
 end
 
@@ -499,6 +506,12 @@ function DH.UI:UpdateDEButton(item, queueCount)
         self.secureDEBtn.label:SetText(string.format(DH.L:Get("de_label"), shortName, queueCount))
     else
         self.secureDEBtn.label:SetText(DH.L:Get("btn_no_item"))
+        if not DH.Disenchant:IsProcessing() then
+            self.selectedItems = {}
+            if self.selectAllCb then self.selectAllCb:SetChecked(false) end
+            self:UpdateItemRows()
+            self:UpdateSelectedCount()
+        end
     end
 end
 
@@ -840,9 +853,25 @@ function DH.UI:CreateLogFrame()
     clearBtn:SetPoint("TOPRIGHT", -8, -4)
     clearBtn:SetScript("OnClick", function() DH.Log:Clear() end)
 
+    -- Column headers
+    local hTime = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hTime:SetPoint("TOPLEFT", 8, -22)
+    hTime:SetTextColor(0.8, 0.8, 0.5)
+    hTime:SetText(DH.L:Get("log_header_time"))
+
+    local hItem = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hItem:SetPoint("TOPLEFT", 72, -22)
+    hItem:SetTextColor(0.8, 0.8, 0.5)
+    hItem:SetText(DH.L:Get("log_header_item"))
+
+    local hLoot = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hLoot:SetPoint("TOPLEFT", 259, -22)
+    hLoot:SetTextColor(0.8, 0.8, 0.5)
+    hLoot:SetText(DH.L:Get("log_header_loot"))
+
     -- Scroll
     local scrollFrame = CreateFrame("ScrollFrame", "DHLogScroll", f, "FauxScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 4, -28)
+    scrollFrame:SetPoint("TOPLEFT", 4, -36)
     scrollFrame:SetPoint("BOTTOMRIGHT", -26, 4)
     self.logScroll = scrollFrame
 
@@ -860,8 +889,13 @@ function DH.UI:CreateLogFrame()
 
         row.itemText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.itemText:SetPoint("LEFT", 68, 0)
-        row.itemText:SetWidth(300)
+        row.itemText:SetWidth(180)
         row.itemText:SetJustifyH("LEFT")
+
+        row.lootText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.lootText:SetPoint("LEFT", 255, 0)
+        row.lootText:SetWidth(200)
+        row.lootText:SetJustifyH("LEFT")
 
         row.statusText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.statusText:SetPoint("RIGHT", -4, 0)
@@ -899,6 +933,21 @@ function DH.UI:UpdateLogRows()
             local entry = entries[dataIndex]
             row.timeText:SetText(DH.Log:FormatTime(entry.time))
             row.itemText:SetText(entry.item or "?")
+
+            if entry.loot and #entry.loot > 0 then
+                local parts = {}
+                for _, l in ipairs(entry.loot) do
+                    local display = l.link or l.name or "?"
+                    if l.qty and l.qty > 1 then
+                        display = display .. " x" .. l.qty
+                    end
+                    table.insert(parts, display)
+                end
+                row.lootText:SetText(table.concat(parts, ", "))
+            else
+                row.lootText:SetText("")
+            end
+
             if entry.success then
                 row.statusText:SetText("|cff00ff00OK|r")
             else
