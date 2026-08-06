@@ -43,9 +43,27 @@ end
 
 function DH.Disenchant:OnEvent(event, ...)
     if event == "LOOT_OPENED" then
-        if isProcessing and DH.Config:Get("autoLoot") then
-            for i = GetNumLootItems(), 1, -1 do
-                LootSlot(i)
+        if isProcessing then
+            if self.lastLogEntry then
+                local loot = {}
+                for i = 1, GetNumLootItems() do
+                    local lootIcon, lootName, lootQty = GetLootSlotInfo(i)
+                    local lootLink = GetLootSlotLink(i)
+                    if lootName then
+                        table.insert(loot, { link = lootLink, name = lootName, qty = lootQty or 1 })
+                    end
+                end
+                self.lastLogEntry.loot = loot
+                self.lastLogEntry = nil
+                if DH.UI.logFrame and DH.UI.logFrame:IsShown() then
+                    DH.UI:RefreshLog()
+                end
+            end
+
+            if DH.Config:Get("autoLoot") then
+                for i = GetNumLootItems(), 1, -1 do
+                    LootSlot(i)
+                end
             end
         end
     elseif event == "LOOT_CLOSED" then
@@ -56,7 +74,7 @@ function DH.Disenchant:OnEvent(event, ...)
         local unit, spell = ...
         if unit == "player" and spell == DISENCHANT_SPELL then
             if self.currentItem then
-                DH.Log:Add(self.currentItem.link, self.currentItem.bag, self.currentItem.slot, true)
+                self.lastLogEntry = DH.Log:Add(self.currentItem.link, self.currentItem.bag, self.currentItem.slot, true)
                 self.currentItem = nil
             end
         end
@@ -182,6 +200,7 @@ function DH.Disenchant:Stop(reason)
     isProcessing = false
     queue = {}
     self.currentItem = nil
+    self.lastLogEntry = nil
     self:ClearMacro()
     if reason then
         DH:Print(reason)

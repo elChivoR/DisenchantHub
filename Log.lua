@@ -28,6 +28,8 @@ function DH.Log:Add(itemLink, bag, slot, success, errorMsg)
     if DH.UI.logFrame and DH.UI.logFrame:IsShown() then
         DH.UI:RefreshLog()
     end
+
+    return entry
 end
 
 function DH.Log:GetEntries(limit)

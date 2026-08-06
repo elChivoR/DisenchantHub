@@ -105,6 +105,9 @@ locales["enUS"] = {
     -- UI - Log
     log_stats = "Total: |cffffffff%d|r  |cff00ff00OK: %d|r  |cffff4444Fail: %d|r",
     btn_clear = "Clear",
+    log_header_time = "Time",
+    log_header_item = "Item",
+    log_header_loot = "Loot",
 
     -- UI - Lists
     whitelist_title = "|cff00ff00Whitelist|r",
@@ -227,6 +230,9 @@ locales["esES"] = {
 
     log_stats = "Total: |cffffffff%d|r  |cff00ff00OK: %d|r  |cffff4444Fallo: %d|r",
     btn_clear = "Limpiar",
+    log_header_time = "Hora",
+    log_header_item = "Objeto",
+    log_header_loot = "Botin",
 
     whitelist_title = "|cff00ff00Lista Blanca|r",
     blacklist_title = "|cffff4444Lista Negra|r",
