@@ -421,7 +421,14 @@ function DH.UI:CreateBottomBar()
             return
         end
         if DH.Config:Get("confirmDisenchant") then
-            StaticPopup_Show("DH_CONFIRM_DE_ALL", #selected)
+            DH.UI:ShowPopup({
+                text = string.format(DH.L:Get("popup_confirm_de"), #selected),
+                button1 = DH.L:Get("popup_yes"),
+                button2 = DH.L:Get("popup_no"),
+                OnAccept = function()
+                    DH.Disenchant:Start(DH.UI:GetSelectedItems())
+                end,
+            })
         else
             DH.Disenchant:Start(selected)
         end
@@ -477,26 +484,8 @@ function DH.UI:CreateBottomBar()
     countLabel:SetPoint("RIGHT", -4, 0)
     self.countLabel = countLabel
 
-    -- Popups
-    StaticPopupDialogs["DH_NO_ENCHANTING"] = {
-        text = DH.L:Get("popup_no_enchanting"),
-        button1 = DH.L:Get("popup_ok"),
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-    }
-
-    StaticPopupDialogs["DH_CONFIRM_DE_ALL"] = {
-        text = DH.L:Get("popup_confirm_de"),
-        button1 = DH.L:Get("popup_yes"),
-        button2 = DH.L:Get("popup_no"),
-        OnAccept = function()
-            DH.Disenchant:Start(DH.UI:GetSelectedItems())
-        end,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-    }
+    -- Custom popup anchored to mainFrame
+    self:CreatePopup()
 end
 
 function DH.UI:UpdateDEButton(item, queueCount)
@@ -511,6 +500,81 @@ function DH.UI:UpdateDEButton(item, queueCount)
     else
         self.secureDEBtn.label:SetText(DH.L:Get("btn_no_item"))
     end
+end
+
+-- ============================================================
+-- Custom popup (anchored to mainFrame)
+-- ============================================================
+
+function DH.UI:CreatePopup()
+    local popup = CreateFrame("Frame", "DHPopup", self.mainFrame)
+    popup:SetSize(340, 140)
+    popup:SetPoint("CENTER", self.mainFrame, "CENTER", 0, 0)
+    popup:SetFrameStrata("DIALOG")
+    popup:SetFrameLevel(self.mainFrame:GetFrameLevel() + 50)
+    popup:EnableKeyboard(true)
+    popup:Hide()
+
+    popup:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
+        tile = true, tileSize = 32, edgeSize = 24,
+        insets = { left = 5, right = 5, top = 5, bottom = 5 },
+    })
+
+    local text = popup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    text:SetPoint("TOP", 0, -18)
+    text:SetPoint("LEFT", 16, 0)
+    text:SetPoint("RIGHT", -16, 0)
+    text:SetJustifyH("CENTER")
+    text:SetWordWrap(true)
+    popup.text = text
+
+    local btn1 = StyledButton(popup, "", 90, 24)
+    btn1:SetPoint("BOTTOM", popup, "BOTTOM", -55, 12)
+    popup.btn1 = btn1
+
+    local btn2 = StyledButton(popup, "", 90, 24)
+    btn2:SetPoint("BOTTOM", popup, "BOTTOM", 55, 12)
+    btn2:Hide()
+    popup.btn2 = btn2
+
+    popup:SetScript("OnKeyDown", function(self, key)
+        if key == "ESCAPE" then
+            self:Hide()
+        end
+    end)
+
+    self.popup = popup
+end
+
+function DH.UI:ShowPopup(config)
+    local p = self.popup
+    p.text:SetText(config.text or "")
+
+    local textHeight = p.text:GetStringHeight() or 30
+    p:SetHeight(textHeight + 70)
+
+    p.btn1:SetText(config.button1 or "OK")
+    p.btn1:SetScript("OnClick", function()
+        p:Hide()
+        if config.OnAccept then config.OnAccept() end
+    end)
+
+    if config.button2 then
+        p.btn2:SetText(config.button2)
+        p.btn2:SetScript("OnClick", function()
+            p:Hide()
+            if config.OnCancel then config.OnCancel() end
+        end)
+        p.btn2:Show()
+        p.btn1:SetPoint("BOTTOM", p, "BOTTOM", -55, 12)
+    else
+        p.btn2:Hide()
+        p.btn1:SetPoint("BOTTOM", p, "BOTTOM", 0, 12)
+    end
+
+    p:Show()
 end
 
 -- ============================================================
@@ -1028,7 +1092,10 @@ function DH.UI:Toggle()
         self.mainFrame:Show()
         local hasEnch = self:UpdateEnchantingLevel()
         if not hasEnch then
-            StaticPopup_Show("DH_NO_ENCHANTING")
+            DH.UI:ShowPopup({
+                text = DH.L:Get("popup_no_enchanting"),
+                button1 = DH.L:Get("popup_ok"),
+            })
         end
         self:SelectTab(self.currentTab or 1)
     end
