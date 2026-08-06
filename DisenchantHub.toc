@@ -1,0 +1,16 @@
+## Interface: 30300
+## Title: DisenchantHub
+## Notes: Automatic disenchanting with configurable filters, hotkeys, and item lists.
+## Author: riicr
+## Version: 1.0.0
+## SavedVariables: DisenchantHubDB
+
+Libs\LibStub.lua
+
+Core.lua
+Config.lua
+Filter.lua
+Lists.lua
+Disenchant.lua
+Log.lua
+UI.lua
