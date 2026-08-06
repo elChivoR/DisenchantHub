@@ -147,11 +147,26 @@ function DH.UI:CreateItemList()
     f:Hide()
     self.itemListFrame = f
 
-    -- Header
-    local header = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    header:SetPoint("TOPLEFT", 8, -6)
-    header:SetText("Item                                              Rarity        ilvl      Type")
-    header:SetTextColor(0.7, 0.7, 0.7)
+    -- Header (aligned to row columns)
+    local hItem = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hItem:SetPoint("TOPLEFT", 30, -6)
+    hItem:SetText("Item")
+    hItem:SetTextColor(0.7, 0.7, 0.7)
+
+    local hRarity = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hRarity:SetPoint("TOPLEFT", 264, -6)
+    hRarity:SetText("Rarity")
+    hRarity:SetTextColor(0.7, 0.7, 0.7)
+
+    local hIlvl = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hIlvl:SetPoint("TOPLEFT", 334, -6)
+    hIlvl:SetText("ilvl")
+    hIlvl:SetTextColor(0.7, 0.7, 0.7)
+
+    local hType = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hType:SetPoint("TOPLEFT", 379, -6)
+    hType:SetText("Type")
+    hType:SetTextColor(0.7, 0.7, 0.7)
 
     -- Scroll frame
     local scrollFrame = CreateFrame("ScrollFrame", "DHItemScroll", f, "FauxScrollFrameTemplate")
