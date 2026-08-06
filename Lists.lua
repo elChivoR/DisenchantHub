@@ -16,14 +16,14 @@ function DH.Lists:AddToWhitelist(itemId, itemName)
     if not itemId then return end
     self.whitelist[itemId] = itemName or true
     self.blacklist[itemId] = nil
-    DH:Print("Agregado a whitelist: " .. (itemName or itemId))
+    DH:Print(DH.L:Get("added_whitelist") .. (itemName or itemId))
 end
 
 function DH.Lists:RemoveFromWhitelist(itemId)
     if not itemId then return end
     local name = self.whitelist[itemId]
     self.whitelist[itemId] = nil
-    DH:Print("Removido de whitelist: " .. (name or itemId))
+    DH:Print(DH.L:Get("removed_whitelist") .. (name or itemId))
 end
 
 function DH.Lists:IsWhitelisted(itemId)
@@ -34,14 +34,14 @@ function DH.Lists:AddToBlacklist(itemId, itemName)
     if not itemId then return end
     self.blacklist[itemId] = itemName or true
     self.whitelist[itemId] = nil
-    DH:Print("Agregado a blacklist: " .. (itemName or itemId))
+    DH:Print(DH.L:Get("added_blacklist") .. (itemName or itemId))
 end
 
 function DH.Lists:RemoveFromBlacklist(itemId)
     if not itemId then return end
     local name = self.blacklist[itemId]
     self.blacklist[itemId] = nil
-    DH:Print("Removido de blacklist: " .. (name or itemId))
+    DH:Print(DH.L:Get("removed_blacklist") .. (name or itemId))
 end
 
 function DH.Lists:IsBlacklisted(itemId)
@@ -80,10 +80,10 @@ end
 
 function DH.Lists:ClearWhitelist()
     wipe(self.whitelist)
-    DH:Print("Whitelist limpiada.")
+    DH:Print(DH.L:Get("whitelist_cleared"))
 end
 
 function DH.Lists:ClearBlacklist()
     wipe(self.blacklist)
-    DH:Print("Blacklist limpiada.")
+    DH:Print(DH.L:Get("blacklist_cleared"))
 end

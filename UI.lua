@@ -10,7 +10,6 @@ local RARITY_COLORS = {
     [5] = { 1, 0.5, 0 },
 }
 
-local RARITY_LABELS = { [0]="Poor", [1]="Common", [2]="Uncommon", [3]="Rare", [4]="Epic", [5]="Legendary" }
 local FRAME_WIDTH = 520
 local FRAME_HEIGHT = 480
 local ROW_HEIGHT = 22
@@ -90,7 +89,8 @@ function DH.UI:CreateMainFrame()
 
     -- Tabs
     local tabs = {}
-    local tabNames = { "Items", "Listas", "Config", "Log" }
+    local L = DH.L
+    local tabNames = { L:Get("tab_items"), L:Get("tab_lists"), L:Get("tab_config"), L:Get("tab_log") }
     for i, name in ipairs(tabNames) do
         local tab = StyledButton(f, name, 80, 20)
         tab:SetPoint("TOPLEFT", 10 + (i - 1) * 85, -32)
@@ -150,27 +150,41 @@ function DH.UI:CreateItemList()
     CreateBackdrop(f, 0.02, 0.02, 0.04, 0.6)
     f:Hide()
     self.itemListFrame = f
+    self.selectedItems = {}
 
     -- Header (aligned to row columns)
+    local selectAllCb = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+    selectAllCb:SetSize(20, 20)
+    selectAllCb:SetPoint("TOPLEFT", 6, -4)
+    selectAllCb:SetScript("OnClick", function(self)
+        DH.UI:ToggleSelectAll(self:GetChecked())
+    end)
+    self.selectAllCb = selectAllCb
+
     local hItem = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hItem:SetPoint("TOPLEFT", 30, -6)
-    hItem:SetText("Item")
+    hItem:SetPoint("TOPLEFT", 48, -6)
+    hItem:SetText(DH.L:Get("header_item"))
     hItem:SetTextColor(0.7, 0.7, 0.7)
 
     local hRarity = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hRarity:SetPoint("TOPLEFT", 264, -6)
-    hRarity:SetText("Rarity")
+    hRarity:SetPoint("TOPLEFT", 274, -6)
+    hRarity:SetText(DH.L:Get("header_rarity"))
     hRarity:SetTextColor(0.7, 0.7, 0.7)
 
     local hIlvl = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hIlvl:SetPoint("TOPLEFT", 334, -6)
-    hIlvl:SetText("ilvl")
+    hIlvl:SetPoint("TOPLEFT", 344, -6)
+    hIlvl:SetText(DH.L:Get("header_ilvl"))
     hIlvl:SetTextColor(0.7, 0.7, 0.7)
 
     local hType = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hType:SetPoint("TOPLEFT", 379, -6)
-    hType:SetText("Type")
+    hType:SetPoint("TOPLEFT", 389, -6)
+    hType:SetText(DH.L:Get("header_type"))
     hType:SetTextColor(0.7, 0.7, 0.7)
+
+    local hSelectLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hSelectLabel:SetPoint("LEFT", selectAllCb, "RIGHT", 0, 0)
+    hSelectLabel:SetText("")
+    hSelectLabel:SetTextColor(0.7, 0.7, 0.7)
 
     -- Scroll frame
     local scrollFrame = CreateFrame("ScrollFrame", "DHItemScroll", f, "FauxScrollFrameTemplate")
@@ -190,25 +204,41 @@ function DH.UI:CreateItemList()
         highlight:SetTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
         highlight:SetAlpha(0.3)
 
+        row.cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
+        row.cb:SetSize(20, 20)
+        row.cb:SetPoint("LEFT", 2, 0)
+        row.cb:SetScript("OnClick", function(self)
+            local data = row.itemData
+            if data then
+                local key = data.bag .. ":" .. data.slot
+                if self:GetChecked() then
+                    DH.UI.selectedItems[key] = data
+                else
+                    DH.UI.selectedItems[key] = nil
+                end
+                DH.UI:UpdateSelectedCount()
+            end
+        end)
+
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(18, 18)
-        row.icon:SetPoint("LEFT", 4, 0)
+        row.icon:SetPoint("LEFT", 24, 0)
 
         row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 4, 0)
-        row.nameText:SetWidth(220)
+        row.nameText:SetWidth(200)
         row.nameText:SetJustifyH("LEFT")
 
         row.rarityText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        row.rarityText:SetPoint("LEFT", 260, 0)
+        row.rarityText:SetPoint("LEFT", 270, 0)
         row.rarityText:SetWidth(70)
 
         row.ilvlText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        row.ilvlText:SetPoint("LEFT", 330, 0)
+        row.ilvlText:SetPoint("LEFT", 340, 0)
         row.ilvlText:SetWidth(40)
 
         row.typeText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        row.typeText:SetPoint("LEFT", 375, 0)
+        row.typeText:SetPoint("LEFT", 385, 0)
         row.typeText:SetWidth(90)
 
         row:SetScript("OnEnter", function(self)
@@ -220,11 +250,9 @@ function DH.UI:CreateItemList()
         end)
         row:SetScript("OnLeave", GameTooltip_Hide)
 
-        row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        row:RegisterForClicks("RightButtonUp")
         row:SetScript("OnClick", function(self, button)
-            if button == "LeftButton" and self.itemData and self.itemData.canDE then
-                DH.Disenchant:PrepareSingle(self.itemData.bag, self.itemData.slot)
-            elseif button == "RightButton" and self.itemData then
+            if button == "RightButton" and self.itemData then
                 DH.UI:ShowItemContextMenu(self)
             end
         end)
@@ -243,17 +271,10 @@ end
 
 function DH.UI:RefreshItems()
     self.items = DH.Filter:GetDisenchantableItems()
+    self.selectedItems = {}
+    if self.selectAllCb then self.selectAllCb:SetChecked(false) end
     self:UpdateItemRows()
-
-    local deCount = 0
-    if self.items then
-        for _, item in ipairs(self.items) do
-            if item.canDE then deCount = deCount + 1 end
-        end
-    end
-    if self.countLabel then
-        self.countLabel:SetText(deCount .. " desencantables")
-    end
+    self:UpdateSelectedCount()
 end
 
 function DH.UI:UpdateItemRows()
@@ -278,7 +299,7 @@ function DH.UI:UpdateItemRows()
             row.nameText:SetText(item.name)
             row.nameText:SetTextColor(color[1], color[2], color[3])
 
-            row.rarityText:SetText(RARITY_LABELS[item.rarity] or "?")
+            row.rarityText:SetText(DH.L:GetRarityLabel(item.rarity))
             row.rarityText:SetTextColor(color[1], color[2], color[3])
 
             row.ilvlText:SetText(item.ilvl)
@@ -289,11 +310,49 @@ function DH.UI:UpdateItemRows()
 
             row.itemLink = item.link
             row.itemData = item
+
+            local key = item.bag .. ":" .. item.slot
+            row.cb:SetChecked(self.selectedItems[key] ~= nil)
+
             row:Show()
         else
             row:Hide()
         end
     end
+end
+
+function DH.UI:ToggleSelectAll(checked)
+    self.selectedItems = {}
+    if checked and self.items then
+        for _, item in ipairs(self.items) do
+            local key = item.bag .. ":" .. item.slot
+            self.selectedItems[key] = item
+        end
+    end
+    self:UpdateItemRows()
+    self:UpdateSelectedCount()
+end
+
+function DH.UI:UpdateSelectedCount()
+    local count = 0
+    for _ in pairs(self.selectedItems) do count = count + 1 end
+    local total = self.items and #self.items or 0
+
+    if self.countLabel then
+        self.countLabel:SetText(string.format(DH.L:Get("selected_count"), count, total))
+    end
+end
+
+function DH.UI:GetSelectedItems()
+    local items = {}
+    for _, item in pairs(self.selectedItems) do
+        table.insert(items, item)
+    end
+    table.sort(items, function(a, b)
+        if a.rarity ~= b.rarity then return a.rarity > b.rarity end
+        return a.ilvl > b.ilvl
+    end)
+    return items
 end
 
 function DH.UI:ShowItemContextMenu(row)
@@ -308,15 +367,15 @@ function DH.UI:ShowItemContextMenu(row)
 
     local menu = {
         { text = item.name, isTitle = true, notCheckable = true },
-        { text = "Seleccionar para DE", notCheckable = true,
+        { text = DH.L:Get("select_for_de"), notCheckable = true,
             func = function() DH.Disenchant:PrepareSingle(item.bag, item.slot) end,
             disabled = not item.canDE },
-        { text = "Agregar a Whitelist", notCheckable = true,
+        { text = DH.L:Get("add_whitelist"), notCheckable = true,
             func = function()
                 DH.Lists:AddToWhitelist(item.itemId, item.name)
                 DH.UI:RefreshItems()
             end },
-        { text = "Agregar a Blacklist", notCheckable = true,
+        { text = DH.L:Get("add_blacklist"), notCheckable = true,
             func = function()
                 DH.Lists:AddToBlacklist(item.itemId, item.name)
                 DH.UI:RefreshItems()
@@ -344,43 +403,36 @@ function DH.UI:CreateBottomBar()
     bar:SetHeight(28)
     self.bottomBar = bar
 
-    local refreshBtn = StyledButton(bar, "Refresh", 70, 24)
+    local refreshBtn = StyledButton(bar, DH.L:Get("btn_refresh"), 70, 24)
     refreshBtn:SetPoint("LEFT", 0, 0)
     refreshBtn:SetScript("OnClick", function() DH.UI:RefreshItems() end)
 
-    -- "DE Todos" queues all filtered items, then user clicks the secure button
-    local deAllBtn = StyledButton(bar, "DE Todos", 80, 24)
-    deAllBtn:SetPoint("LEFT", refreshBtn, "RIGHT", 6, 0)
-    deAllBtn:SetScript("OnClick", function()
+    -- "DE Seleccion" queues selected items
+    local deSelBtn = StyledButton(bar, DH.L:Get("btn_de_selection"), 95, 24)
+    deSelBtn:SetPoint("LEFT", refreshBtn, "RIGHT", 6, 0)
+    deSelBtn:SetScript("OnClick", function()
         if DH.Disenchant:IsProcessing() then
-            DH.Disenchant:Stop("Detenido por el usuario.")
+            DH.Disenchant:Stop(DH.L:Get("stopped_by_user"))
             return
         end
-        if not DH.UI.items or #DH.UI.items == 0 then
-            DH:Print("No hay items. Haz click en Refresh primero.")
-            return
-        end
-        local count = 0
-        for _, item in ipairs(DH.UI.items) do
-            if item.canDE then count = count + 1 end
-        end
-        if count == 0 then
-            DH:Print("Ningun item pasa los filtros.")
+        local selected = DH.UI:GetSelectedItems()
+        if #selected == 0 then
+            DH:Print(DH.L:Get("no_selected"))
             return
         end
         if DH.Config:Get("confirmDisenchant") then
-            StaticPopup_Show("DH_CONFIRM_DE_ALL", count)
+            StaticPopup_Show("DH_CONFIRM_DE_ALL", #selected)
         else
-            DH.Disenchant:Start(DH.UI.items)
+            DH.Disenchant:Start(selected)
         end
     end)
-    self.deAllBtn = deAllBtn
+    self.deSelBtn = deSelBtn
 
     -- The actual secure button that performs the disenchant via macro
     local secureDE = DH.Disenchant.secureBtn
     secureDE:SetParent(bar)
-    secureDE:SetSize(140, 24)
-    secureDE:SetPoint("LEFT", deAllBtn, "RIGHT", 6, 0)
+    secureDE:SetSize(150, 24)
+    secureDE:SetPoint("LEFT", deSelBtn, "RIGHT", 6, 0)
 
     -- Visual styling (secure buttons can't use UIPanelButtonTemplate, so we style manually)
     local ntex = secureDE:CreateTexture()
@@ -403,7 +455,7 @@ function DH.UI:CreateBottomBar()
 
     local label = secureDE:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     label:SetPoint("CENTER")
-    label:SetText("|cff666666Sin item|r")
+    label:SetText(DH.L:Get("btn_no_item"))
     secureDE.label = label
 
     -- PostClick fires after the secure action completes (not protected)
@@ -415,10 +467,10 @@ function DH.UI:CreateBottomBar()
     self.secureDEBtn = secureDE
 
     -- Stop button
-    local stopBtn = StyledButton(bar, "Stop", 50, 24)
+    local stopBtn = StyledButton(bar, DH.L:Get("btn_stop"), 50, 24)
     stopBtn:SetPoint("LEFT", secureDE, "RIGHT", 6, 0)
     stopBtn:SetScript("OnClick", function()
-        DH.Disenchant:Stop("Detenido por el usuario.")
+        DH.Disenchant:Stop(DH.L:Get("stopped_by_user"))
     end)
 
     local countLabel = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -427,19 +479,19 @@ function DH.UI:CreateBottomBar()
 
     -- Popups
     StaticPopupDialogs["DH_NO_ENCHANTING"] = {
-        text = "No tenes la profesion Enchanting aprendida.\n\nDisenchantHub necesita Enchanting para funcionar.",
-        button1 = "Entendido",
+        text = DH.L:Get("popup_no_enchanting"),
+        button1 = DH.L:Get("popup_ok"),
         timeout = 0,
         whileDead = true,
         hideOnEscape = true,
     }
 
     StaticPopupDialogs["DH_CONFIRM_DE_ALL"] = {
-        text = "Vas a desencantar %s items. Continuar?",
-        button1 = "Si",
-        button2 = "No",
+        text = DH.L:Get("popup_confirm_de"),
+        button1 = DH.L:Get("popup_yes"),
+        button2 = DH.L:Get("popup_no"),
         OnAccept = function()
-            DH.Disenchant:Start(DH.UI.items)
+            DH.Disenchant:Start(DH.UI:GetSelectedItems())
         end,
         timeout = 0,
         whileDead = true,
@@ -455,9 +507,9 @@ function DH.UI:UpdateDEButton(item, queueCount)
         if #shortName > 15 then
             shortName = shortName:sub(1, 14) .. ".."
         end
-        self.secureDEBtn.label:SetText("|cff00ff00DE: " .. shortName .. " (" .. queueCount .. ")|r")
+        self.secureDEBtn.label:SetText(string.format(DH.L:Get("de_label"), shortName, queueCount))
     else
-        self.secureDEBtn.label:SetText("|cff666666Sin item|r")
+        self.secureDEBtn.label:SetText(DH.L:Get("btn_no_item"))
     end
 end
 
@@ -477,13 +529,13 @@ function DH.UI:CreateConfigFrame()
     -- Section: Filters
     local filterTitle = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     filterTitle:SetPoint("TOPLEFT", 10, y)
-    filterTitle:SetText("|cff00ccffFiltros|r")
+    filterTitle:SetText(DH.L:Get("cfg_filters"))
     y = y - 22
 
     -- Min Rarity
     local minRarLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     minRarLabel:SetPoint("TOPLEFT", 10, y)
-    minRarLabel:SetText("Rarity minima:")
+    minRarLabel:SetText(DH.L:Get("cfg_min_rarity"))
     local minRarVal = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     minRarVal:SetPoint("TOPLEFT", 200, y)
     self.cfgMinRarVal = minRarVal
@@ -505,7 +557,7 @@ function DH.UI:CreateConfigFrame()
     -- Max Rarity
     local maxRarLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     maxRarLabel:SetPoint("TOPLEFT", 10, y)
-    maxRarLabel:SetText("Rarity maxima:")
+    maxRarLabel:SetText(DH.L:Get("cfg_max_rarity"))
     local maxRarVal = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     maxRarVal:SetPoint("TOPLEFT", 200, y)
     self.cfgMaxRarVal = maxRarVal
@@ -527,7 +579,7 @@ function DH.UI:CreateConfigFrame()
     -- Min ilvl
     local minIlvlLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     minIlvlLabel:SetPoint("TOPLEFT", 10, y)
-    minIlvlLabel:SetText("ilvl minimo:")
+    minIlvlLabel:SetText(DH.L:Get("cfg_min_ilvl"))
     local minIlvlBox = CreateFrame("EditBox", "DHMinIlvlBox", f, "InputBoxTemplate")
     minIlvlBox:SetPoint("TOPLEFT", 200, y + 4)
     minIlvlBox:SetSize(60, 20)
@@ -544,7 +596,7 @@ function DH.UI:CreateConfigFrame()
     -- Max ilvl
     local maxIlvlLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     maxIlvlLabel:SetPoint("TOPLEFT", 10, y)
-    maxIlvlLabel:SetText("ilvl maximo:")
+    maxIlvlLabel:SetText(DH.L:Get("cfg_max_ilvl"))
     local maxIlvlBox = CreateFrame("EditBox", "DHMaxIlvlBox", f, "InputBoxTemplate")
     maxIlvlBox:SetPoint("TOPLEFT", 200, y + 4)
     maxIlvlBox:SetSize(60, 20)
@@ -561,24 +613,24 @@ function DH.UI:CreateConfigFrame()
     -- Section: Opciones
     local optTitle = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     optTitle:SetPoint("TOPLEFT", 10, y)
-    optTitle:SetText("|cff00ccffOpciones|r")
+    optTitle:SetText(DH.L:Get("cfg_options"))
     y = y - 22
 
-    local autoLootCb = StyledCheckbox(f, "Auto-loot al desencantar", function(self)
+    local autoLootCb = StyledCheckbox(f, DH.L:Get("cfg_auto_loot"), function(self)
         DH.Config:Set("autoLoot", self:GetChecked() and true or false)
     end)
     autoLootCb:SetPoint("TOPLEFT", 10, y)
     self.cfgAutoLoot = autoLootCb
     y = y - 24
 
-    local confirmCb = StyledCheckbox(f, "Confirmar antes de DE masivo", function(self)
+    local confirmCb = StyledCheckbox(f, DH.L:Get("cfg_confirm_bulk"), function(self)
         DH.Config:Set("confirmDisenchant", self:GetChecked() and true or false)
     end)
     confirmCb:SetPoint("TOPLEFT", 10, y)
     self.cfgConfirm = confirmCb
     y = y - 24
 
-    local soundCb = StyledCheckbox(f, "Sonido al desencantar", function(self)
+    local soundCb = StyledCheckbox(f, DH.L:Get("cfg_sound"), function(self)
         DH.Config:Set("soundEnabled", self:GetChecked() and true or false)
     end)
     soundCb:SetPoint("TOPLEFT", 10, y)
@@ -588,10 +640,10 @@ function DH.UI:CreateConfigFrame()
     -- Section: Hotkey
     local hkTitle = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     hkTitle:SetPoint("TOPLEFT", 10, y)
-    hkTitle:SetText("|cff00ccffHotkey|r")
+    hkTitle:SetText(DH.L:Get("cfg_hotkey_section"))
     y = y - 22
 
-    local hkEnable = StyledCheckbox(f, "Hotkey habilitado", function(self)
+    local hkEnable = StyledCheckbox(f, DH.L:Get("cfg_hotkey_enabled"), function(self)
         DH.Config:Set("hotkeyEnabled", self:GetChecked() and true or false)
     end)
     hkEnable:SetPoint("TOPLEFT", 10, y)
@@ -600,26 +652,65 @@ function DH.UI:CreateConfigFrame()
 
     local hkLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hkLabel:SetPoint("TOPLEFT", 10, y)
-    hkLabel:SetText("Tecla actual:")
+    hkLabel:SetText(DH.L:Get("cfg_hotkey_current"))
     local hkVal = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     hkVal:SetPoint("TOPLEFT", 100, y)
     self.cfgHkVal = hkVal
 
-    local hkSetBtn = StyledButton(f, "Cambiar", 70, 20)
+    local hkSetBtn = StyledButton(f, DH.L:Get("cfg_hotkey_change"), 70, 20)
     hkSetBtn:SetPoint("TOPLEFT", 200, y + 2)
     hkSetBtn:SetScript("OnClick", function()
-        DH:Print("Presiona una tecla para asignar como hotkey...")
+        DH:Print(DH.L:Get("cfg_hotkey_capture"))
         self:CaptureHotkey()
     end)
     y = y - 30
 
+    -- Section: Language
+    local langTitle = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    langTitle:SetPoint("TOPLEFT", 10, y)
+    langTitle:SetText(DH.L:Get("cfg_language"))
+    y = y - 22
+
+    local langLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    langLabel:SetPoint("TOPLEFT", 10, y)
+    langLabel:SetText(DH.L:Get("cfg_lang_label"))
+
+    local langVal = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    langVal:SetPoint("TOPLEFT", 100, y)
+    self.cfgLangVal = langVal
+
+    local langPrev = StyledButton(f, "<", 24, 20)
+    langPrev:SetPoint("TOPLEFT", 220, y + 2)
+    local langNext = StyledButton(f, ">", 24, 20)
+    langNext:SetPoint("LEFT", langPrev, "RIGHT", 2, 0)
+
+    local supported = DH.L:GetSupported()
+    local function cycleLang(dir)
+        local cur = DH.L:GetCurrent()
+        local idx = 1
+        for i, loc in ipairs(supported) do
+            if loc == cur then idx = i; break end
+        end
+        idx = idx + dir
+        if idx < 1 then idx = #supported end
+        if idx > #supported then idx = 1 end
+        DH.L:SetLocale(supported[idx])
+        DH.UI:RefreshConfig()
+        DH:Print(DH.L:Get("cfg_lang_reload"))
+    end
+
+    langPrev:SetScript("OnClick", function() cycleLang(-1) end)
+    langNext:SetScript("OnClick", function() cycleLang(1) end)
+    y = y - 30
+
     -- Reset
-    local resetBtn = StyledButton(f, "Reset Config", 100, 24)
+    local resetBtn = StyledButton(f, DH.L:Get("cfg_reset_btn"), 100, 24)
     resetBtn:SetPoint("TOPLEFT", 10, y)
     resetBtn:SetScript("OnClick", function()
         DH.Config:Reset()
+        DH.L:Init()
         DH.UI:RefreshConfig()
-        DH:Print("Configuracion reseteada.")
+        DH:Print(DH.L:Get("cfg_reset_done"))
     end)
 end
 
@@ -630,9 +721,9 @@ function DH.UI:RefreshConfig()
     local rc1 = RARITY_COLORS[minR] or RARITY_COLORS[1]
     local rc2 = RARITY_COLORS[maxR] or RARITY_COLORS[1]
 
-    self.cfgMinRarVal:SetText(RARITY_LABELS[minR] or "?")
+    self.cfgMinRarVal:SetText(DH.L:GetRarityLabel(minR))
     self.cfgMinRarVal:SetTextColor(rc1[1], rc1[2], rc1[3])
-    self.cfgMaxRarVal:SetText(RARITY_LABELS[maxR] or "?")
+    self.cfgMaxRarVal:SetText(DH.L:GetRarityLabel(maxR))
     self.cfgMaxRarVal:SetTextColor(rc2[1], rc2[2], rc2[3])
     self.cfgMinIlvl:SetText(tostring(cfg:Get("minIlvl")))
     self.cfgMaxIlvl:SetText(tostring(cfg:Get("maxIlvl")))
@@ -641,6 +732,9 @@ function DH.UI:RefreshConfig()
     self.cfgSound:SetChecked(cfg:Get("soundEnabled"))
     self.cfgHkEnabled:SetChecked(cfg:Get("hotkeyEnabled"))
     self.cfgHkVal:SetText(cfg:Get("hotkey") or "None")
+    if self.cfgLangVal then
+        self.cfgLangVal:SetText(DH.L:Get("lang_" .. DH.L:GetCurrent()))
+    end
 end
 
 function DH.UI:CaptureHotkey()
@@ -649,10 +743,10 @@ function DH.UI:CaptureHotkey()
         self.hkCapture:EnableKeyboard(true)
         self.hkCapture:SetScript("OnKeyDown", function(self, key)
             if key == "ESCAPE" then
-                DH:Print("Captura de hotkey cancelada.")
+                DH:Print(DH.L:Get("cfg_hotkey_cancelled"))
             else
                 DH.Config:Set("hotkey", key)
-                DH:Print("Hotkey asignado: |cff00ff00" .. key .. "|r")
+                DH:Print(string.format(DH.L:Get("cfg_hotkey_assigned"), key))
                 DH.UI:RefreshConfig()
             end
             self:Hide()
@@ -678,7 +772,7 @@ function DH.UI:CreateLogFrame()
     statsLabel:SetPoint("TOPLEFT", 8, -6)
     self.logStatsLabel = statsLabel
 
-    local clearBtn = StyledButton(f, "Limpiar", 70, 20)
+    local clearBtn = StyledButton(f, DH.L:Get("btn_clear"), 70, 20)
     clearBtn:SetPoint("TOPRIGHT", -8, -4)
     clearBtn:SetScript("OnClick", function() DH.Log:Clear() end)
 
@@ -722,10 +816,7 @@ end
 
 function DH.UI:RefreshLog()
     local total, success, failed = DH.Log:GetStats()
-    self.logStatsLabel:SetText(string.format(
-        "Total: |cffffffff%d|r  |cff00ff00OK: %d|r  |cffff4444Fail: %d|r",
-        total, success, failed
-    ))
+    self.logStatsLabel:SetText(string.format(DH.L:Get("log_stats"), total, success, failed))
     self:UpdateLogRows()
 end
 
@@ -774,9 +865,9 @@ function DH.UI:CreateListManager()
     -- Whitelist section
     local wlTitle = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     wlTitle:SetPoint("TOPLEFT", 10, -8)
-    wlTitle:SetText("|cff00ff00Whitelist|r")
+    wlTitle:SetText(DH.L:Get("whitelist_title"))
 
-    local wlClear = StyledButton(f, "Limpiar", 60, 18)
+    local wlClear = StyledButton(f, DH.L:Get("btn_clean"), 60, 18)
     wlClear:SetPoint("TOPLEFT", 120, -6)
     wlClear:SetScript("OnClick", function()
         DH.Lists:ClearWhitelist()
@@ -821,9 +912,9 @@ function DH.UI:CreateListManager()
     -- Blacklist section
     local blTitle = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     blTitle:SetPoint("TOPLEFT", 10, -190)
-    blTitle:SetText("|cffff4444Blacklist|r")
+    blTitle:SetText(DH.L:Get("blacklist_title"))
 
-    local blClear = StyledButton(f, "Limpiar", 60, 18)
+    local blClear = StyledButton(f, DH.L:Get("btn_clean"), 60, 18)
     blClear:SetPoint("TOPLEFT", 120, -188)
     blClear:SetScript("OnClick", function()
         DH.Lists:ClearBlacklist()
@@ -868,7 +959,7 @@ function DH.UI:CreateListManager()
     -- Hint
     local hint = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hint:SetPoint("BOTTOMLEFT", 10, 8)
-    hint:SetText("|cff888888Tip: Click derecho en un item de la tab Items para agregarlo a una lista|r")
+    hint:SetText(DH.L:Get("lists_tip"))
 end
 
 function DH.UI:RefreshLists()
@@ -923,9 +1014,9 @@ end
 function DH.UI:UpdateEnchantingLevel()
     local hasEnch, rank, maxRank = DH.Disenchant:GetEnchantingInfo()
     if hasEnch then
-        self.enchLevelLabel:SetText("|cffFFD100Enchanting:|r " .. rank .. "/" .. maxRank)
+        self.enchLevelLabel:SetText(string.format(DH.L:Get("enchanting_level"), rank, maxRank))
     else
-        self.enchLevelLabel:SetText("|cffff4444No Enchanting|r")
+        self.enchLevelLabel:SetText(DH.L:Get("no_enchanting"))
     end
     return hasEnch
 end

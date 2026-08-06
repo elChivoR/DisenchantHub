@@ -15,6 +15,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         local addon = ...
         if addon == ADDON_NAME then
             DH.Config:Init()
+            DH.L:Init()
             DH.Lists:Init()
             DH.Log:Init()
             DH.Filter:Init()
@@ -29,7 +30,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
 end)
 
 function DH:OnLogin()
-    self:Print("|cff00ccffDisenchantHub v" .. self.version .. "|r cargado. Usa |cff00ff00/dh|r para abrir.")
+    self:Print(string.format(self.L:Get("loaded"), self.version))
     self.Config:RegisterHotkeys()
 end
 
@@ -50,14 +51,14 @@ SlashCmdList["DISENCHANTHUB"] = function(input)
         DH.UI:ShowLog()
     elseif cmd == "reset" then
         DH.Config:Reset()
-        DH:Print("Configuracion reseteada a valores por defecto.")
+        DH:Print(DH.L:Get("config_reset"))
     elseif cmd == "help" then
-        DH:Print("Comandos disponibles:")
-        DH:Print("  |cff00ff00/dh|r - Abrir/cerrar la ventana principal")
-        DH:Print("  |cff00ff00/dh config|r - Abrir configuracion")
-        DH:Print("  |cff00ff00/dh log|r - Ver historial de desencantamientos")
-        DH:Print("  |cff00ff00/dh reset|r - Resetear configuracion")
+        DH:Print(DH.L:Get("cmd_help_title"))
+        DH:Print(DH.L:Get("cmd_help_toggle"))
+        DH:Print(DH.L:Get("cmd_help_config"))
+        DH:Print(DH.L:Get("cmd_help_log"))
+        DH:Print(DH.L:Get("cmd_help_reset"))
     else
-        DH:Print("Comando desconocido. Usa |cff00ff00/dh help|r para ver los comandos.")
+        DH:Print(DH.L:Get("cmd_unknown"))
     end
 end

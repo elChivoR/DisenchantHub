@@ -12,6 +12,7 @@ local DEFAULTS = {
     hotkeyEnabled = true,
     logMaxEntries = 200,
     soundEnabled = true,
+    locale = "enUS",
 }
 
 function DH.Config:Init()

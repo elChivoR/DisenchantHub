@@ -41,7 +41,7 @@ end
 
 function DH.Log:Clear()
     wipe(self.entries)
-    DH:Print("Log limpiado.")
+    DH:Print(DH.L:Get("log_cleared"))
     if DH.UI.logFrame and DH.UI.logFrame:IsShown() then
         DH.UI:RefreshLog()
     end

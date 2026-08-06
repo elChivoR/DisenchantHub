@@ -17,6 +17,7 @@ function DH.Disenchant:Init()
     eventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     eventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
     eventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+    eventFrame:RegisterEvent("BAG_UPDATE")
 
     eventFrame:SetScript("OnEvent", function(self, event, ...)
         DH.Disenchant:OnEvent(event, ...)
@@ -66,12 +67,16 @@ function DH.Disenchant:OnEvent(event, ...)
                 DH.Log:Add(self.currentItem.link, self.currentItem.bag, self.currentItem.slot, false, "Cast failed")
                 self.currentItem = nil
             end
-            self:Stop("Cast interrumpido.")
+            self:Stop(DH.L:Get("cast_interrupted"))
         end
     elseif event == "UI_ERROR_MESSAGE" then
         local msg = ...
         if isProcessing and msg then
-            DH:Print("|cffff0000Error:|r " .. msg)
+            DH:Print(DH.L:Get("error_prefix") .. msg)
+        end
+    elseif event == "BAG_UPDATE" then
+        if DH.UI.mainFrame and DH.UI.mainFrame:IsShown() and DH.UI.currentTab == 1 then
+            DH.UI:RefreshItems()
         end
     end
 end
@@ -88,12 +93,12 @@ end
 
 function DH.Disenchant:Start(items)
     if isProcessing then
-        DH:Print("Ya hay un proceso de desencantamiento en curso.")
+        DH:Print(DH.L:Get("already_processing"))
         return
     end
 
     if not items or #items == 0 then
-        DH:Print("No hay items para desencantar.")
+        DH:Print(DH.L:Get("no_items"))
         return
     end
 
@@ -105,12 +110,12 @@ function DH.Disenchant:Start(items)
     end
 
     if #queue == 0 then
-        DH:Print("Ningun item pasa los filtros actuales.")
+        DH:Print(DH.L:Get("no_items_pass"))
         return
     end
 
     isProcessing = true
-    DH:Print("Cola de |cff00ff00" .. #queue .. "|r items. Haz click en |cff00ccff[Desencantar]|r para cada uno.")
+    DH:Print(string.format(DH.L:Get("queue_ready"), #queue))
     self:PrepareNext()
 end
 
@@ -118,7 +123,7 @@ function DH.Disenchant:PrepareNext()
     if not isProcessing then return end
 
     if #queue == 0 then
-        self:Stop("Proceso completado.")
+        self:Stop(DH.L:Get("process_complete"))
         return
     end
 
@@ -128,12 +133,12 @@ function DH.Disenchant:PrepareNext()
         if currentLink and currentLink == item.link then
             break
         end
-        DH:Print("|cffff9900Saltando|r " .. item.name .. " (ya no esta en la posicion original)")
+        DH:Print(string.format(DH.L:Get("skipping"), item.name))
         table.remove(queue, 1)
     end
 
     if #queue == 0 then
-        self:Stop("Proceso completado.")
+        self:Stop(DH.L:Get("process_complete"))
         return
     end
 
@@ -151,7 +156,7 @@ function DH.Disenchant:OnSecureClick()
     end
 
     local item = table.remove(queue, 1)
-    DH:Print("Desencantando: " .. item.link .. " (" .. #queue .. " restantes)")
+    DH:Print(string.format(DH.L:Get("disenchanting"), item.link, #queue))
 end
 
 function DH.Disenchant:PrepareSingle(bag, slot)
@@ -160,7 +165,7 @@ function DH.Disenchant:PrepareSingle(bag, slot)
 
     local canDE, reason = DH.Filter:CanDisenchant(itemLink)
     if not canDE then
-        DH:Print("No se puede desencantar: " .. (reason or "unknown"))
+        DH:Print(DH.L:Get("cannot_de") .. (reason or "unknown"))
         return
     end
 
@@ -170,7 +175,7 @@ function DH.Disenchant:PrepareSingle(bag, slot)
     isProcessing = true
     self:SetupMacro(bag, slot)
     DH.UI:UpdateDEButton(self.currentItem, 1)
-    DH:Print("Listo para desencantar: " .. itemLink .. " - Haz click en |cff00ccff[Desencantar]|r")
+    DH:Print(string.format(DH.L:Get("ready_to_de"), itemLink))
 end
 
 function DH.Disenchant:Stop(reason)
@@ -182,7 +187,6 @@ function DH.Disenchant:Stop(reason)
         DH:Print(reason)
     end
     DH.UI:UpdateDEButton(nil, 0)
-    DH.UI:RefreshItems()
 end
 
 function DH.Disenchant:IsProcessing()
