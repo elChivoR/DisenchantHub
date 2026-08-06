@@ -78,8 +78,12 @@ function DH.UI:CreateMainFrame()
     f:Hide()
 
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", 0, -10)
+    title:SetPoint("TOPLEFT", 12, -10)
     title:SetText("|cff8800ffDisenchantHub|r")
+
+    local enchLevelLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    enchLevelLabel:SetPoint("TOPRIGHT", -30, -13)
+    self.enchLevelLabel = enchLevelLabel
 
     local closeBtn = CreateFrame("Button", nil, f, "UIPanelCloseButton")
     closeBtn:SetPoint("TOPRIGHT", -2, -2)
@@ -421,7 +425,15 @@ function DH.UI:CreateBottomBar()
     countLabel:SetPoint("RIGHT", -4, 0)
     self.countLabel = countLabel
 
-    -- Confirmation popup
+    -- Popups
+    StaticPopupDialogs["DH_NO_ENCHANTING"] = {
+        text = "No tenes la profesion Enchanting aprendida.\n\nDisenchantHub necesita Enchanting para funcionar.",
+        button1 = "Entendido",
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+    }
+
     StaticPopupDialogs["DH_CONFIRM_DE_ALL"] = {
         text = "Vas a desencantar %s items. Continuar?",
         button1 = "Si",
@@ -908,11 +920,25 @@ end
 -- Public API
 -- ============================================================
 
+function DH.UI:UpdateEnchantingLevel()
+    local hasEnch, rank, maxRank = DH.Disenchant:GetEnchantingInfo()
+    if hasEnch then
+        self.enchLevelLabel:SetText("|cffFFD100Enchanting:|r " .. rank .. "/" .. maxRank)
+    else
+        self.enchLevelLabel:SetText("|cffff4444No Enchanting|r")
+    end
+    return hasEnch
+end
+
 function DH.UI:Toggle()
     if self.mainFrame:IsShown() then
         self.mainFrame:Hide()
     else
         self.mainFrame:Show()
+        local hasEnch = self:UpdateEnchantingLevel()
+        if not hasEnch then
+            StaticPopup_Show("DH_NO_ENCHANTING")
+        end
         self:SelectTab(self.currentTab or 1)
     end
 end

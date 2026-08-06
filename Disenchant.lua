@@ -2,6 +2,7 @@ local DH = DisenchantHub
 DH.Disenchant = {}
 
 local DISENCHANT_SPELL = GetSpellInfo(13262) or "Disenchant"
+local ENCHANTING_NAMES = { ["Enchanting"] = true, ["Encantamiento"] = true }
 local isProcessing = false
 local queue = {}
 
@@ -73,6 +74,16 @@ function DH.Disenchant:OnEvent(event, ...)
             DH:Print("|cffff0000Error:|r " .. msg)
         end
     end
+end
+
+function DH.Disenchant:GetEnchantingInfo()
+    for i = 1, GetNumSkillLines() do
+        local name, isHeader, _, rank, _, _, maxRank = GetSkillLineInfo(i)
+        if not isHeader and ENCHANTING_NAMES[name] then
+            return true, rank, maxRank
+        end
+    end
+    return false, 0, 0
 end
 
 function DH.Disenchant:Start(items)
