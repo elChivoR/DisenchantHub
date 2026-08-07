@@ -167,14 +167,19 @@ function DH.UI:CreateItemList()
     hItem:SetTextColor(0.7, 0.7, 0.7)
 
     local hRarity = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hRarity:SetPoint("TOPLEFT", 274, -6)
+    hRarity:SetPoint("TOPLEFT", 245, -6)
     hRarity:SetText(DH.L:Get("header_rarity"))
     hRarity:SetTextColor(0.7, 0.7, 0.7)
 
     local hIlvl = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hIlvl:SetPoint("TOPLEFT", 344, -6)
+    hIlvl:SetPoint("TOPLEFT", 315, -6)
     hIlvl:SetText(DH.L:Get("header_ilvl"))
     hIlvl:SetTextColor(0.7, 0.7, 0.7)
+
+    local hReq = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hReq:SetPoint("TOPLEFT", 350, -6)
+    hReq:SetText(DH.L:Get("header_req"))
+    hReq:SetTextColor(0.7, 0.7, 0.7)
 
     local hType = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hType:SetPoint("TOPLEFT", 389, -6)
@@ -209,7 +214,7 @@ function DH.UI:CreateItemList()
         row.cb:SetPoint("LEFT", 2, 0)
         row.cb:SetScript("OnClick", function(self)
             local data = row.itemData
-            if data then
+            if data and data.canDE then
                 local key = data.bag .. ":" .. data.slot
                 if self:GetChecked() then
                     DH.UI.selectedItems[key] = data
@@ -217,6 +222,8 @@ function DH.UI:CreateItemList()
                     DH.UI.selectedItems[key] = nil
                 end
                 DH.UI:UpdateSelectedCount()
+            else
+                self:SetChecked(false)
             end
         end)
 
@@ -226,16 +233,20 @@ function DH.UI:CreateItemList()
 
         row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 4, 0)
-        row.nameText:SetWidth(200)
+        row.nameText:SetWidth(175)
         row.nameText:SetJustifyH("LEFT")
 
         row.rarityText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        row.rarityText:SetPoint("LEFT", 270, 0)
+        row.rarityText:SetPoint("LEFT", 241, 0)
         row.rarityText:SetWidth(70)
 
         row.ilvlText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        row.ilvlText:SetPoint("LEFT", 340, 0)
-        row.ilvlText:SetWidth(40)
+        row.ilvlText:SetPoint("LEFT", 311, 0)
+        row.ilvlText:SetWidth(35)
+
+        row.reqText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.reqText:SetPoint("LEFT", 348, 0)
+        row.reqText:SetWidth(35)
 
         row.typeText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.typeText:SetPoint("LEFT", 385, 0)
@@ -298,24 +309,36 @@ function DH.UI:UpdateItemRows()
             local texture = select(10, GetItemInfo(item.link))
             row.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
 
+            local dim = not item.canDE
+            local alpha = dim and 0.4 or 1.0
+
             row.nameText:SetText(item.name)
-            row.nameText:SetTextColor(color[1], color[2], color[3])
+            row.nameText:SetTextColor(color[1], color[2], color[3], alpha)
 
             row.rarityText:SetText(DH.L:GetRarityLabel(item.rarity))
-            row.rarityText:SetTextColor(color[1], color[2], color[3])
+            row.rarityText:SetTextColor(color[1], color[2], color[3], alpha)
 
             row.ilvlText:SetText(item.ilvl)
-            row.ilvlText:SetTextColor(1, 1, 1)
+            row.ilvlText:SetTextColor(1, 1, 1, alpha)
+
+            row.reqText:SetText(item.reqSkill or "")
+            if dim then
+                row.reqText:SetTextColor(1, 0.3, 0.3)
+            else
+                row.reqText:SetTextColor(0.3, 1, 0.3)
+            end
 
             row.typeText:SetText(item.itemType)
-            row.typeText:SetTextColor(0.7, 0.7, 0.7)
+            row.typeText:SetTextColor(0.7, 0.7, 0.7, alpha)
+
+            row.icon:SetAlpha(alpha)
 
             row.itemLink = item.link
             row.itemData = item
 
             local key = item.bag .. ":" .. item.slot
             row.cb:SetChecked(self.selectedItems[key] ~= nil)
-            row.cb:Enable(not DH.Disenchant:IsProcessing())
+            row.cb:Enable(not dim and not DH.Disenchant:IsProcessing())
 
             row:Show()
         else
@@ -332,8 +355,10 @@ function DH.UI:ToggleSelectAll(checked)
     self.selectedItems = {}
     if checked and self.items then
         for _, item in ipairs(self.items) do
-            local key = item.bag .. ":" .. item.slot
-            self.selectedItems[key] = item
+            if item.canDE then
+                local key = item.bag .. ":" .. item.slot
+                self.selectedItems[key] = item
+            end
         end
     end
     self:UpdateItemRows()

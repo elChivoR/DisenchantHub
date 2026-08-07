@@ -15,6 +15,32 @@ local DISENCHANTABLE_TYPES = {
     ["Weapon"] = true,
 }
 
+local DE_SKILL_BRACKETS = {
+    { maxIlvl = 20,  skill = 1   },
+    { maxIlvl = 25,  skill = 25  },
+    { maxIlvl = 30,  skill = 50  },
+    { maxIlvl = 35,  skill = 75  },
+    { maxIlvl = 40,  skill = 100 },
+    { maxIlvl = 45,  skill = 125 },
+    { maxIlvl = 50,  skill = 150 },
+    { maxIlvl = 55,  skill = 175 },
+    { maxIlvl = 60,  skill = 200 },
+    { maxIlvl = 99,  skill = 225 },
+    { maxIlvl = 120, skill = 275 },
+    { maxIlvl = 150, skill = 300 },
+    { maxIlvl = 200, skill = 325 },
+    { maxIlvl = 999, skill = 350 },
+}
+
+function DH.Filter:GetRequiredSkill(ilvl)
+    for _, bracket in ipairs(DE_SKILL_BRACKETS) do
+        if ilvl <= bracket.maxIlvl then
+            return bracket.skill
+        end
+    end
+    return 350
+end
+
 function DH.Filter:Init()
 end
 
@@ -72,6 +98,8 @@ end
 
 function DH.Filter:GetDisenchantableItems()
     local items = {}
+    local _, playerSkill = DH.Disenchant:GetEnchantingInfo()
+
     for bag = 0, 4 do
         local slots = GetContainerNumSlots(bag)
         for slot = 1, slots do
@@ -81,6 +109,8 @@ function DH.Filter:GetDisenchantableItems()
                 if canDE then
                     local name, _, rarity, ilvl, _, itemType = GetItemInfo(itemLink)
                     local _, count = GetContainerItemInfo(bag, slot)
+                    local reqSkill = self:GetRequiredSkill(ilvl or 0)
+                    local skillOk = playerSkill >= reqSkill
                     table.insert(items, {
                         bag = bag,
                         slot = slot,
@@ -90,7 +120,8 @@ function DH.Filter:GetDisenchantableItems()
                         ilvl = ilvl or 0,
                         itemType = itemType or "?",
                         count = count or 1,
-                        canDE = true,
+                        canDE = skillOk,
+                        reqSkill = reqSkill,
                         itemId = self:GetItemId(itemLink),
                     })
                 end
@@ -98,6 +129,7 @@ function DH.Filter:GetDisenchantableItems()
         end
     end
     table.sort(items, function(a, b)
+        if a.canDE ~= b.canDE then return a.canDE end
         if a.rarity ~= b.rarity then return a.rarity > b.rarity end
         return a.ilvl > b.ilvl
     end)

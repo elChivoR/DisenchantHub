@@ -61,6 +61,7 @@ locales["enUS"] = {
     header_item = "Item",
     header_rarity = "Rarity",
     header_ilvl = "ilvl",
+    header_req = "Req",
     header_type = "Type",
 
     -- UI - Bottom bar
@@ -191,6 +192,7 @@ locales["esES"] = {
     header_item = "Objeto",
     header_rarity = "Rareza",
     header_ilvl = "ilvl",
+    header_req = "Req",
     header_type = "Tipo",
 
     btn_refresh = "Actualizar",
