@@ -9,7 +9,7 @@ Built for [Project Ascension](https://ascension.gg/) and WotLK private servers.
 
 | Items Tab | Config Tab |
 |:-:|:-:|
-| ![Items Tab](https://i.gyazo.com/ea150b535bf909fcc74991196e3d2317.png) | ![Config Tab](https://i.gyazo.com/287e80cffc294e9aca5ba0061b2c0a43.png) |
+| ![Items Tab](https://i.gyazo.com/0e45280484c37a1e38a14d05f6360cf1.png) | ![Config Tab](https://i.gyazo.com/287e80cffc294e9aca5ba0061b2c0a43.png) |
 
 ---
 
