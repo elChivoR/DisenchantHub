@@ -27,9 +27,7 @@ local DE_SKILL_BRACKETS = {
     { maxIlvl = 60,  skill = 200 },
     { maxIlvl = 99,  skill = 225 },
     { maxIlvl = 120, skill = 275 },
-    { maxIlvl = 150, skill = 300 },
-    { maxIlvl = 200, skill = 325 },
-    { maxIlvl = 999, skill = 350 },
+    { maxIlvl = 999, skill = 300 },
 }
 
 function DH.Filter:GetRequiredSkill(ilvl)
@@ -38,7 +36,7 @@ function DH.Filter:GetRequiredSkill(ilvl)
             return bracket.skill
         end
     end
-    return 350
+    return 300
 end
 
 function DH.Filter:Init()
