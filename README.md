@@ -73,7 +73,7 @@ Built for [Project Ascension](https://ascension.gg/) and WotLK private servers.
 | Min Rarity | Uncommon | Lowest rarity to show |
 | Max Rarity | Epic | Highest rarity to show |
 | Min ilvl | 0 | Minimum item level |
-| Max ilvl | 999 | Maximum item level |
+| Max ilvl | 300 | Maximum item level (capped at 300) |
 | Auto-loot | On | Automatically loot disenchant results |
 | Sound | On | Play sound on each disenchant |
 | Hotkey | F5 | Key to toggle the UI |

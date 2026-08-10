@@ -5,7 +5,7 @@ local DEFAULTS = {
     minRarity = 2, -- 0=Poor,1=Common,2=Uncommon,3=Rare,4=Epic
     maxRarity = 4,
     minIlvl = 0,
-    maxIlvl = 999,
+    maxIlvl = 300,
     autoLoot = true,
     confirmDisenchant = true,
     hotkey = "F5",

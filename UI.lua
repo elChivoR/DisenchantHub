@@ -531,7 +531,10 @@ function DH.UI:CreateConfigFrame()
     maxIlvlBox:SetAutoFocus(false)
     maxIlvlBox:SetNumeric(true)
     maxIlvlBox:SetScript("OnEnterPressed", function(self)
-        DH.Config:Set("maxIlvl", tonumber(self:GetText()) or 999)
+        local val = tonumber(self:GetText()) or 300
+        if val > 300 then val = 300 end
+        DH.Config:Set("maxIlvl", val)
+        self:SetText(tostring(val))
         self:ClearFocus()
     end)
     maxIlvlBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
