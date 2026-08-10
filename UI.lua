@@ -10,9 +10,9 @@ local RARITY_COLORS = {
     [5] = { 1, 0.5, 0 },
 }
 
-local FRAME_WIDTH = 520
-local FRAME_HEIGHT = 480
-local ROW_HEIGHT = 22
+local FRAME_WIDTH = 570
+local FRAME_HEIGHT = 520
+local ROW_HEIGHT = 24
 
 -- ============================================================
 -- Utility helpers
@@ -33,7 +33,7 @@ local function StyledButton(parent, text, width, height)
     local btn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
     btn:SetSize(width or 100, height or 22)
     btn:SetText(text)
-    btn:GetFontString():SetFont("Fonts\\FRIZQT__.TTF", 11)
+    btn:GetFontString():SetFont("Fonts\\FRIZQT__.TTF", 12)
     return btn
 end
 
@@ -92,8 +92,8 @@ function DH.UI:CreateMainFrame()
     local L = DH.L
     local tabNames = { L:Get("tab_items"), L:Get("tab_lists"), L:Get("tab_config"), L:Get("tab_log") }
     for i, name in ipairs(tabNames) do
-        local tab = StyledButton(f, name, 80, 20)
-        tab:SetPoint("TOPLEFT", 10 + (i - 1) * 85, -32)
+        local tab = StyledButton(f, name, 90, 22)
+        tab:SetPoint("TOPLEFT", 10 + (i - 1) * 95, -32)
         tab.index = i
         tab:SetScript("OnClick", function() DH.UI:SelectTab(i) end)
         tabs[i] = tab
@@ -152,24 +152,25 @@ function DH.UI:CreateItemList()
     self.itemListFrame = f
     -- Header columns
     local COLUMNS = {
-        { key = "name",   label = "header_item",   width = 220 },
-        { key = "rarity", label = "header_rarity",  width = 75  },
-        { key = "ilvl",   label = "header_ilvl",    width = 35  },
-        { key = "req",    label = "header_req",     width = 35  },
-        { key = "type",   label = "header_type",    width = 70  },
+        { key = "name",   label = "header_item",   width = 245 },
+        { key = "rarity", label = "header_rarity",  width = 80  },
+        { key = "ilvl",   label = "header_ilvl",    width = 40  },
+        { key = "req",    label = "header_req",     width = 40  },
+        { key = "type",   label = "header_type",    width = 75  },
     }
     self.columns = COLUMNS
 
     -- Invisible spacer matching the icon in rows
     local hSpacer = CreateFrame("Frame", nil, f)
-    hSpacer:SetSize(18, 1)
-    hSpacer:SetPoint("TOPLEFT", 6, -6)
+    hSpacer:SetSize(20, 1)
+    hSpacer:SetPoint("TOPLEFT", 6, -10)
 
     local prevHeader = hSpacer
     for _, col in ipairs(COLUMNS) do
         local h = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         h:SetPoint("LEFT", prevHeader, "RIGHT", 4, 0)
         h:SetWidth(col.width)
+        h:SetFont("Fonts\\FRIZQT__.TTF", 11)
         h:SetText(DH.L:Get(col.label))
         h:SetTextColor(0.7, 0.7, 0.7)
         h:SetJustifyH("LEFT")
@@ -179,7 +180,7 @@ function DH.UI:CreateItemList()
 
     -- Scroll frame
     local scrollFrame = CreateFrame("ScrollFrame", "DHItemScroll", f, "FauxScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 4, -22)
+    scrollFrame:SetPoint("TOPLEFT", 4, -28)
     scrollFrame:SetPoint("BOTTOMRIGHT", -26, 4)
     self.itemScroll = scrollFrame
 
@@ -198,12 +199,13 @@ function DH.UI:CreateItemList()
         highlight:SetAlpha(0.3)
 
         row.icon = row:CreateTexture(nil, "ARTWORK")
-        row.icon:SetSize(18, 18)
+        row.icon:SetSize(20, 20)
         row.icon:SetPoint("LEFT", 4, 0)
 
         local prevCol = row.icon
         for _, col in ipairs(self.columns) do
             local fs = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            fs:SetFont("Fonts\\FRIZQT__.TTF", 11)
             fs:SetPoint("LEFT", prevCol, "RIGHT", 4, 0)
             fs:SetWidth(col.width)
             fs:SetJustifyH("LEFT")
@@ -269,8 +271,8 @@ function DH.UI:UpdateItemRows()
             local alpha = dim and 0.4 or 1.0
 
             local displayName = item.name
-            if #displayName > 22 then
-                displayName = displayName:sub(1, 20) .. "..."
+            if #displayName > 26 then
+                displayName = displayName:sub(1, 24) .. "..."
             end
             row.nameText:SetText(displayName)
             row.nameText:SetTextColor(color[1], color[2], color[3], alpha)
@@ -696,23 +698,26 @@ function DH.UI:CreateLogFrame()
 
     -- Column headers
     local hTime = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hTime:SetPoint("TOPLEFT", 8, -22)
+    hTime:SetFont("Fonts\\FRIZQT__.TTF", 11)
+    hTime:SetPoint("TOPLEFT", 8, -24)
     hTime:SetTextColor(0.8, 0.8, 0.5)
     hTime:SetText(DH.L:Get("log_header_time"))
 
     local hItem = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hItem:SetPoint("TOPLEFT", 72, -22)
+    hItem:SetFont("Fonts\\FRIZQT__.TTF", 11)
+    hItem:SetPoint("TOPLEFT", 72, -24)
     hItem:SetTextColor(0.8, 0.8, 0.5)
     hItem:SetText(DH.L:Get("log_header_item"))
 
     local hLoot = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hLoot:SetPoint("TOPLEFT", 259, -22)
+    hLoot:SetFont("Fonts\\FRIZQT__.TTF", 11)
+    hLoot:SetPoint("TOPLEFT", 259, -24)
     hLoot:SetTextColor(0.8, 0.8, 0.5)
     hLoot:SetText(DH.L:Get("log_header_loot"))
 
     -- Scroll
     local scrollFrame = CreateFrame("ScrollFrame", "DHLogScroll", f, "FauxScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 4, -36)
+    scrollFrame:SetPoint("TOPLEFT", 4, -40)
     scrollFrame:SetPoint("BOTTOMRIGHT", -26, 4)
     self.logScroll = scrollFrame
 
@@ -724,21 +729,25 @@ function DH.UI:CreateLogFrame()
         row:SetPoint("TOPLEFT", scrollFrame, "TOPLEFT", 0, -((i - 1) * ROW_HEIGHT))
 
         row.timeText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.timeText:SetFont("Fonts\\FRIZQT__.TTF", 11)
         row.timeText:SetPoint("LEFT", 4, 0)
         row.timeText:SetWidth(60)
         row.timeText:SetTextColor(0.6, 0.6, 0.6)
 
         row.itemText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.itemText:SetFont("Fonts\\FRIZQT__.TTF", 11)
         row.itemText:SetPoint("LEFT", 68, 0)
         row.itemText:SetWidth(180)
         row.itemText:SetJustifyH("LEFT")
 
         row.lootText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.lootText:SetFont("Fonts\\FRIZQT__.TTF", 11)
         row.lootText:SetPoint("LEFT", 255, 0)
-        row.lootText:SetWidth(200)
+        row.lootText:SetWidth(220)
         row.lootText:SetJustifyH("LEFT")
 
         row.statusText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.statusText:SetFont("Fonts\\FRIZQT__.TTF", 11)
         row.statusText:SetPoint("RIGHT", -4, 0)
 
         logRows[i] = row
