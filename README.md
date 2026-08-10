@@ -36,7 +36,7 @@ Built for [Project Ascension](https://ascension.gg/) and WotLK private servers.
    ```
    WoW/Interface/AddOns/DisenchantHub/
    ```
-3. Restart WoW or type `/reload`
+3. Restart WoW
 
 ## Usage
 
